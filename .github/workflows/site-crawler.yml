@@ -53,4 +53,53 @@ jobs:
             --accept 200,403,429
             --format markdown --output lychee/out.md
             https://ubuntutalks.com/
-            ht
+            https://ubuntutalks.com/about-us
+
+      - name: Upload lychee report
+        uses: actions/upload-artifact@v4
+        with:
+          name: lychee-report
+          path: lychee/out.md
+
+  accessibility:
+    name: Accessibility (pa11y-ci)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install pa11y-ci
+        run: npm install -g pa11y-ci
+
+      - name: Run pa11y on homepage
+        run: pa11y-ci --reporter html --output pa11y-home.html https://ubuntutalks.com/
+
+      - name: Run pa11y on about page
+        run: pa11y-ci --reporter html --output pa11y-about.html https://ubuntutalks.com/about-us
+
+      - name: Upload pa11y reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: pa11y-reports
+          path: |
+            pa11y-home.html
+            pa11y-about.html
+
+  zap_baseline:
+    name: ZAP baseline scan
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Run ZAP baseline scan
+        uses: zaproxy/action-baseline@v0.11.0
+        with:
+          target: 'https://ubuntutalks.com'
+
+      - name: Upload ZAP baseline report
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-baseline-report
+          path: zap-baseline-report.html
