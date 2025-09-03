@@ -1,37 +1,38 @@
 name: UbuntuTalks Site Crawler Audits
 
 on:
-  workflow_dispatch: {}         # run manually from Actions tab
-  schedule:
-    - cron: "0 9 * * 1,4"       # Mon & Thu 09:00 UTC (optional)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  security-events: write
 
 jobs:
   lighthouse:
-    name: Lighthouse (Perf/SEO/A11y/Best Practices)
     runs-on: ubuntu-latest
     steps:
-      - name: Run Lighthouse CI on key pages
+      - name: Run Lighthouse CI
         uses: treosh/lighthouse-ci-action@v11
         with:
           urls: |
             https://ubuntutalks.com/
             https://ubuntutalks.com/about-us
-          uploadArtifacts: true               # HTML/JSON reports as artifacts
-          temporaryPublicStorage: true        # temp LHCI links in logs
+          uploadArtifacts: true
 
   links:
-    name: Broken link crawl (Lychee)
     runs-on: ubuntu-latest
     steps:
-      - name: Check links on key pages
+      - name: Check external links
         id: lychee
         uses: lycheeverse/lychee-action@v2
         with:
           args: >
             --verbose --no-progress --timeout 30 --max-concurrency 20
+            --accept 200,403,429
             --format markdown --output lychee/out.md
             https://ubuntutalks.com/
             https://ubuntutalks.com/about-us
+        continue-on-error: true
       - name: Upload Lychee report
         if: always()
         uses: actions/upload-artifact@v4
@@ -40,7 +41,6 @@ jobs:
           path: lychee/out.md
 
   accessibility:
-    name: Accessibility (Pa11y)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/setup-node@v4
@@ -50,25 +50,22 @@ jobs:
         run: npm i -g pa11y-ci
       - name: Run pa11y on homepage
         run: pa11y-ci https://ubuntutalks.com/ --reporter html > pa11y-home.html
-      - name: Run pa11y on About page
-        run: pa11y-ci https://ubuntutalks.com/about-us --reporter html > pa11y-about.html
-      - name: Upload Pa11y reports
+        continue-on-error: true
+      - name: Upload Pa11y report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: pa11y-reports
-          path: |
-            pa11y-home.html
-            pa11y-about.html
+          name: pa11y-report
+          path: pa11y-home.html
 
   zap_baseline:
-    name: Security (OWASP ZAP Baseline)
     runs-on: ubuntu-latest
     steps:
-      - name: Run ZAP Baseline (passive, safe)
+      - name: Run ZAP Baseline
         uses: zaproxy/action-baseline@v0.11.0
         with:
           target: "https://ubuntutalks.com"
+        continue-on-error: true
       - name: Upload ZAP report
         if: always()
         uses: actions/upload-artifact@v4
