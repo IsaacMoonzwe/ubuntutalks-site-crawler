@@ -1,12 +1,69 @@
 name: Site crawler audits
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "0 9 * * 1,4"  # Runs Mon & Thu at 09:00 UTC; adjust as you like
 
 jobs:
-  test:
+  lighthouse:
+    name: Lighthouse (Performance/SEO/Best Practices/Accessibility)
     runs-on: ubuntu-latest
     steps:
-      - name: Say hello
-        run: echo "✅ Workflow is working!"
+      - name: Run Lighthouse CI on homepage
+        uses: treosh/lighthouse-ci-action@v11
+        with:
+          urls: |
+            https://ubuntutalks.com/
+          uploadArtifacts: true
+          temporaryPublicStorage: true
 
+  links:
+    name: Broken link crawl (Lychee)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check external links
+        id: lychee
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: --verbose --no-progress --timeout 30 --max-concurrency 20 --format markdown --output lychee/out.md https://ubuntutalks.com/
+      - name: Upload Lychee report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lychee-report
+          path: lychee/out.md
+
+  accessibility:
+    name: Accessibility (Pa11y)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install pa11y-ci
+        run: npm i -g pa11y-ci
+      - name: Run pa11y on homepage
+        run: |
+          pa11y-ci https://ubuntutalks.com/ --reporter html > pa11y-report.html
+      - name: Upload Pa11y report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pa11y-report
+          path: pa11y-report.html
+
+  zap_baseline:
+    name: Security (OWASP ZAP Baseline)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run ZAP Baseline Scan (passive, safe)
+        uses: zaproxy/action-baseline@v0.11.0
+        with:
+          target: "https://ubuntutalks.com"
+      - name: Upload ZAP report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-baseline-report
+          path: zap-baseline-report.html
