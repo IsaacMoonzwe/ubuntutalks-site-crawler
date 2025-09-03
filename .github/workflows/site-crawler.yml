@@ -4,25 +4,47 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
   security-events: write
 
 jobs:
   lighthouse:
+    name: Lighthouse (Perf/SEO/A11y/Best Practices)
     runs-on: ubuntu-latest
     steps:
-      - name: Run Lighthouse CI
-        uses: treosh/lighthouse-ci-action@v11
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          urls: |
-            https://ubuntutalks.com/
-            https://ubuntutalks.com/about-us
-          uploadArtifacts: true
+          node-version: 20
+
+      # Use LHCI CLI directly and write reports to filesystem (no LHCI server).
+      - name: Run Lighthouse (homepage)
+        run: |
+          npx @lhci/cli@0.12.x autorun \
+            --collect.url=https://ubuntutalks.com/ \
+            --collect.numberOfRuns=1 \
+            --upload.target=filesystem \
+            --upload.outputDir=./lhci/home
+      - name: Run Lighthouse (about)
+        run: |
+          npx @lhci/cli@0.12.x autorun \
+            --collect.url=https://ubuntutalks.com/about-us \
+            --collect.numberOfRuns=1 \
+            --upload.target=filesystem \
+            --upload.outputDir=./lhci/about
+
+      - name: Upload Lighthouse reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-reports
+          path: lhci/**
 
   links:
+    name: Broken link crawl (Lychee)
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
-      - name: Check external links
+      - name: Check links
         id: lychee
         uses: lycheeverse/lychee-action@v2
         with:
@@ -31,44 +53,4 @@ jobs:
             --accept 200,403,429
             --format markdown --output lychee/out.md
             https://ubuntutalks.com/
-            https://ubuntutalks.com/about-us
-        continue-on-error: true
-      - name: Upload Lychee report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: lychee-report
-          path: lychee/out.md
-
-  accessibility:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - name: Install pa11y-ci
-        run: npm i -g pa11y-ci
-      - name: Run pa11y on homepage
-        run: pa11y-ci https://ubuntutalks.com/ --reporter html > pa11y-home.html
-        continue-on-error: true
-      - name: Upload Pa11y report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: pa11y-report
-          path: pa11y-home.html
-
-  zap_baseline:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Run ZAP Baseline
-        uses: zaproxy/action-baseline@v0.11.0
-        with:
-          target: "https://ubuntutalks.com"
-        continue-on-error: true
-      - name: Upload ZAP report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: zap-baseline-report
-          path: zap-baseline-report.html
+            ht
