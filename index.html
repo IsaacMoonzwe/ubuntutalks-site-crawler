@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ubuntu Talks - Community Platform</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- Theme and viewport meta tags for PWA -->
+    <meta name="theme-color" content="#E95420">
+    <meta name="background-color" content="#ffffff">
+    <meta name="display" content="standalone">
+    <meta name="orientation" content="portrait-primary">
+    
+    <!-- iOS Safari specific meta tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Ubuntu Talks">
+    
+    <!-- Apple touch icons -->
+    <link rel="apple-touch-icon" href="/icons/icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192x192.png">
+    
+    <!-- Standard favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16x16.png">
+    
+    <!-- Microsoft tiles -->
+    <meta name="msapplication-TileColor" content="#E95420">
+    <meta name="msapplication-TileImage" content="/icons/icon-144x144.png">
+    <meta name="msapplication-config" content="/browserconfig.xml">
+    
+    <!-- Open Graph meta tags for social sharing -->
+    <meta property="og:title" content="Ubuntu Talks">
+    <meta property="og:description" content="Community platform for Ubuntu users and enthusiasts">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://app.ubuntutalks.com">
+    <meta property="og:image" content="/icons/icon-512x512.png">
+    
+    <!-- Twitter Card meta tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Ubuntu Talks">
+    <meta name="twitter:description" content="Community platform for Ubuntu users and enthusiasts">
+    <meta name="twitter:image" content="/icons/icon-512x512.png">
+    
+    <!-- Description for search engines and app stores -->
+    <meta name="description" content="Ubuntu Talks - Community platform for Ubuntu users and enthusiasts to share knowledge, discuss topics, and connect with the Ubuntu community.">
+    <meta name="keywords" content="Ubuntu, Linux, Community, Talks, Discussion, Open Source">
+    <meta name="author" content="Ubuntu Talks Team">
+    
+    <!-- Prevent automatic phone number detection -->
+    <meta name="format-detection" content="telephone=no">
+    
+    <!-- Security headers -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://app.ubuntutalks.com">
+</head>
+<body>
+    <h1>Ubuntu Talks</h1>
+    <p>Welcome to Ubuntu Talks - A community platform for Ubuntu users and enthusiasts.</p>
+    
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(function(registration) {
+                        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                    })
+                    .catch(function(error) {
+                        console.log('ServiceWorker registration failed: ', error);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
