@@ -53,4 +53,74 @@ jobs:
             --accept 200,403,429
             --format markdown --output lychee/out.md
             https://ubuntutalks.com/
-            ht
+            https://ubuntutalks.com/about-us
+
+      - name: Upload broken link report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lychee-report
+          path: lychee/**
+
+  image_analysis:
+    name: Image Analysis (Alt text & Descriptions)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run image analysis
+        run: |
+          python image_analyzer.py https://ubuntutalks.com/ https://ubuntutalks.com/about-us
+          
+          # Create GitHub Actions summary
+          echo "## 🖼️ Image Analysis Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -f image_analysis_report.json ]; then
+            # Extract key metrics from the JSON report
+            total_images=$(jq -r '.summary.total_images' image_analysis_report.json)
+            compliance=$(jq -r '.summary.compliance_percentage' image_analysis_report.json)
+            avg_score=$(jq -r '.summary.average_accessibility_score' image_analysis_report.json)
+            total_issues=$(jq -r '.summary.total_issues' image_analysis_report.json)
+            
+            echo "### 📊 Summary" >> $GITHUB_STEP_SUMMARY
+            echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+            echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+            echo "| Total Images | $total_images |" >> $GITHUB_STEP_SUMMARY
+            echo "| Alt Text Compliance | ${compliance}% |" >> $GITHUB_STEP_SUMMARY
+            echo "| Average Accessibility Score | ${avg_score}/100 |" >> $GITHUB_STEP_SUMMARY
+            echo "| Issues Found | $total_issues |" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            
+            if (( $(echo "$compliance < 80" | bc -l) )); then
+              echo "❌ **FAILED**: Alt text compliance is below 80% threshold" >> $GITHUB_STEP_SUMMARY
+            elif (( $(echo "$compliance < 95" | bc -l) )); then
+              echo "⚠️ **WARNING**: Alt text compliance could be improved" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "✅ **EXCELLENT**: Alt text compliance meets high standards" >> $GITHUB_STEP_SUMMARY
+            fi
+            
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "📄 **Detailed report available in the artifacts**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Failed to generate image analysis report" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload image analysis report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: image-analysis-report
+          path: image_analysis_report.json
