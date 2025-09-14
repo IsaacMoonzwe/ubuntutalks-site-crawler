@@ -33,6 +33,14 @@ jobs:
             --upload.target=filesystem \
             --upload.outputDir=./lhci/about
 
+      - name: Run Lighthouse PWA audit (app subdomain)
+        run: |
+          npx @lhci/cli@0.12.x autorun \
+            --collect.url=https://app.ubuntutalks.com/ \
+            --collect.numberOfRuns=1 \
+            --upload.target=filesystem \
+            --upload.outputDir=./lhci/pwa-app
+
       - name: Upload Lighthouse reports
         uses: actions/upload-artifact@v4
         with:
